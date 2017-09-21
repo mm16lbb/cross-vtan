@@ -1,7 +1,9 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; 2nd attempt at plotting VTAN with 
-; nest domain model input
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Plotting tangential velocity of Hurricane Rita (2005) as a 
+; funciton of radius and pressure level, using WRF model data
+; Data transformed from cartesian to cylindrical coordinates
+; Values azimuthally averaged at each radius
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
@@ -25,13 +27,13 @@ a = addfile(path+"wrfout_d02_2005-09-20_12:00:00","r")
 
 ; --- What times and how many time steps are in the data set?
 
-  time_0  = wrf_times_c(a->Times,0)
-  time_1  = wrf_times_c(a->Times,1)
+  time_0  = wrf_times_c(a->Times,0)	; hours since intial time
+  time_1  = wrf_times_c(a->Times,1)	; hours since 1901-01-01 00:00:00
 
   ntimes = dimsizes(time_0)         ; number of times in the file
 
 init_time = time_1(0)
-init_time = (/ init_time - time_0(0) /)  ; incase of any time offset
+init_time = (/ init_time - time_0(0) /)  ; in case of any time offset
 
 ; --- Lat/Lon in 1D and 2D
 
@@ -74,7 +76,7 @@ pii     = 3.14159265
 ;;   Begin time loop
 ;; ================================
 
-  do it = 18,ntimes-1          ; every 6 hours
+  do it = 18,ntimes-1
 ;  do it = 0,18,9          ; testing
 
    print("Working on time: " + cd_string(time_1(it),"") +" t+"+(tointeger(time_0(it))))
@@ -85,46 +87,14 @@ format = "%d:%H"
 time_str = cd_string(time_0(it),format)
 
 ;================================================================================
-; Find cyclone centre on subset of global grid (use both height and vorticity)
+; Find cyclone centre on subset of global grid (using height)
 ;================================================================================
 
     ; Choose a level in the lower troposphere
       ilev = 8  ; 872 hPa
 
     ; First, concentrate on a subset of the global grid (not needed here?)
-      	;u1   = u_plane(it,ilev,:,:)
-      	;v1   = v_plane(it,ilev,:,:)
       geo1 = geo_plane(it,ilev,:,:)
-
-      	;u1!0 = "lat"
-      	;u1!1 = "lon"
-      	;u1&lat    = lat1
-      	;u1&lon  = lon1
-      	;copy_VarMeta(u1,v1)
-
-    ; RELATIVE VORTICITY
-      ;vort_plane    = uv2vr_cfd(u1,v1,lat1,lon1,0)      ;different function
-      ;vort_plane    = vort_plane * 10^5
-      ;vort_plane@units = "10~S~-5~N~ s~S~-1~N~"
-      ;vort_plane@description = "Relative vorticity"
-
-     ; vort_max      = max(vort_plane)
-     ; vort_smth     = smth9_Wrap(vort_plane, 0.5, 0.5, True)
-     ; vort_max_smth = max(vort_smth)
-
-     ; dims          = dimsizes(vort_plane)
-     ; vort1d        = ndtooned(vort_plane)
-     ; inds          = ind_resolve(maxind(vort1d),dims)
-     ; vort1d_sm     = ndtooned(vort_smth)
-     ; inds_sm       = ind_resolve(maxind(vort1d_sm),dims)
-
-     ; lat_max850 = 20.3587 + 0.02524*inds(0,0)  ; Distance between lat. points - 0.025
-     ; lon_max850 = -92.00711 + 0.02603*inds(0,1) ; Distance between lon. points - 0.026
-     ; print("Cyclone centre (vort): "+lat_max850+" degrees N, "+abs(lon_max850)+" degrees W")
-
-        ;printVarSummary(vort_plane)
-        ;printVarSummary(vort_smth)
-        ;printVarSummary(vort1d)
 
     ; GEOPOTENTIAL HEIGHT
       geo_min       = min(geo1)
@@ -139,12 +109,6 @@ time_str = cd_string(time_0(it),format)
 
      lat_min850	= lat1(inds_h(0,0))
      lon_min850 = lon1(inds_h(0,1))
-
-   ;   lat_min850 = 20.3587 + 0.02524*inds_h(0,0)  ; Distance between lat. points - 0.025
-   ;   lon_min850 = -92.00711 + 0.02603*inds_h(0,1) ; Distance between lon. points - 0.026
-    ;  print("Cyclone centre (hgt): "+lat_min850+" degrees N, "+abs(lon_min850)+" degrees W")
-
-	;printVarSummary(geo1)
 
 	; tidy up
      delete([/geo1,inds_h/])
@@ -350,7 +314,7 @@ copy_VarMeta(vtan_km0,vtan_km4)
 ; === Output file ===
 
          ; where plots live
-   plot_path = "/nfs/a37/mm16lbb/data1/Lisa_thesis/cross_sections/nest/plots/VTAN/"
+   plot_path = "/ PATH TO FOLDER /"
    output    = (plot_path+time_str+"_nest_vtan_km")
    type	     = "pdf"
    ;type     = "png"
